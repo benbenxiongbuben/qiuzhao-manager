@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>秋招投递管家</title>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+:root{
+  --c-r1:#fef3c7;--t-r1:#b45309;
+  --c-r2:#dbeafe;--t-r2:#1d4ed8;
+  --c-r3:#d1fae5;--t-r3:#047857;
+  --c-ai:#c7d2fe;--t-ai:#4338ca;
+  --c-written:#fbcfe8;--t-written:#be185d;
+  --c-assess:#fde68a;--t-assess:#92400e;
+  --c-offer:#d1fae5;--t-offer:#047857;
+  --c-dead:#fee2e2;--t-dead:#b91c1c;
+  --c-none:#f3f4f6;--t-none:#6b7280;
+  --c-done:#e5e7eb;--t-done:#9ca3af;
+  --c-endtext:#dc2626;
+  --f1:#34d399;--f2:#059669;
+  --b1:#60a5fa;--b2:#2563eb;
+  --c-card:#2563eb;
+  --c-todo:#fef9c3;--c-todo-b:#fde047;
+  --c-doneNode:#dbeafe;--c-doneNode-b:#93c5fd;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#222;font-size:13px}
+header{background:#1f2937;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600}
+button{border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;background:#e5e7eb}
+button:hover{filter:brightness(.95)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-p{background:#2563eb;color:#fff}
+.btn-g{background:#059669;color:#fff}
+.btn-r{background:#dc2626;color:#fff}
+.btn-y{background:#f59e0b;color:#fff}
+.btn-c{background:#8b5cf6;color:#fff}
+nav{display:flex;gap:4px;padding:10px 18px 0;background:#fff;border-bottom:1px solid #e5e7eb}
+nav div{padding:8px 16px;cursor:pointer;border-radius:6px 6px 0 0;font-weight:500;color:#666}
+nav div.on{background:#eff6ff;color:#2563eb;border-bottom:2px solid #2563eb}
+main{padding:16px 18px 60px}
+.page{display:none}.page.on{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.card{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card .n{font-size:24px;font-weight:700;color:var(--c-card)}
+.card .l{color:#6b7280;font-size:12px;margin-top:2px}
+.card .s{color:#9ca3af;font-size:11px}
+.panel{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.panel h3{margin:0 0 12px;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-row .nm{width:110px;text-align:right;color:#555;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-out{flex:1;background:#f1f2f4;border-radius:4px;height:20px;overflow:hidden}
+.bar-in{height:100%;background:linear-gradient(90deg,var(--b1),var(--b2));border-radius:4px;transition:width .4s}
+.bar-row .vv{width:76px;color:#374151;font-variant-numeric:tabular-nums}
+.funnel .bar-in{background:linear-gradient(90deg,var(--f1),var(--f2))}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+input,select,textarea{border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit}
+.msel{position:relative;display:inline-block}
+.msel .dd{position:absolute;top:100%;left:0;background:#fff;border:1px solid #d1d5db;border-radius:6px;box-shadow:0 4px 6px rgba(0,0,0,.1);z-index:10;margin-top:2px;max-height:260px;overflow:auto;min-width:170px;display:none;padding:4px 0}
+.msel.on .dd{display:block}
+.msel .dd label{display:block;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.msel .dd label:hover{background:#f3f4f6}
+.msel .dd label.all{border-bottom:1px solid #e5e7eb;font-weight:600;color:#2563eb;margin-bottom:4px}
+.msel .dd input{margin-right:6px}
+.msel button.act{background:#dbeafe;color:#1d4ed8}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+th{background:#f9fafb;padding:8px 6px;text-align:left;font-size:12px;color:#4b5563;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+td{padding:7px 6px;border-bottom:1px solid #f0f1f3;vertical-align:middle}
+tr.main:hover{background:#fafbfc}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;white-space:nowrap}
+.t-none{background:var(--c-none);color:var(--t-none)}
+.t-mid{background:var(--c-assess);color:var(--t-assess)}
+.t-off{background:var(--c-offer);color:var(--t-offer)}
+.t-out{background:var(--c-dead);color:var(--t-dead)}
+.t-r1{background:var(--c-r1);color:var(--t-r1)}
+.t-r2{background:var(--c-r2);color:var(--t-r2)}
+.t-r3{background:var(--c-r3);color:var(--t-r3)}
+.t-ai{background:var(--c-ai);color:var(--t-ai)}
+.t-written{background:var(--c-written);color:var(--t-written)}
+.t-assess{background:var(--c-assess);color:var(--t-assess)}
+.exp{cursor:pointer;color:#9ca3af;user-select:none;width:18px;display:inline-block}
+tr.detail td{background:#fbfcfd;padding:12px 16px}
+.tl{display:flex;flex-wrap:wrap;gap:6px}
+.tl .node{border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;background:#fff;min-width:96px}
+.tl .node .k{font-size:11px;color:#6b7280}
+.tl .node .v{font-weight:600;margin-top:2px}
+.tl .node.done{background:var(--c-doneNode);border-color:var(--c-doneNode-b)}
+.tl .node.todo{background:var(--c-todo);border-color:var(--c-todo-b)}
+.tl .node.empty{opacity:.45}
+.red{color:var(--c-endtext);font-weight:600}
+a{color:#2563eb;text-decoration:none}
+.cal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e5e7eb;border-radius:8px;overflow:hidden}
+.cal .dow,.sch-grid .dow{background:#f9fafb;text-align:center;padding:8px;font-size:12px;color:#6b7280;font-weight:600}
+.cell{background:#fff;min-height:96px;padding:5px 6px;cursor:pointer;transition:background .15s}
+.cell:hover{background:#f8fafc}
+.cell.out{background:#fafafa;color:#c9ccd1}
+.cell.today .dn,.sch-cell.today .dn{background:#2563eb;color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center}
+.dn{font-size:12px;font-weight:600;color:#374151}
+.ev,.sev{font-size:11px;padding:2px 5px;border-radius:4px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev.done,.sev.done{background:var(--c-done);color:var(--t-done)}
+.ev.auto{background:#ede9fe;color:#6d28d9}
+.ev.assess{background:var(--c-assess);color:var(--t-assess)}
+.ev.ai{background:var(--c-ai);color:var(--t-ai)}
+.ev.written{background:var(--c-written);color:var(--t-written)}
+.ev.r1,.sev.r1{background:var(--c-r1);color:var(--t-r1)}
+.ev.r2,.sev.r2{background:var(--c-r2);color:var(--t-r2)}
+.ev.r3,.sev.r3{background:var(--c-r3);color:var(--t-r3)}
+.mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;align-items:center;justify-content:center}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:12px;padding:20px;width:min(680px,92vw);max-height:88vh;overflow:auto}
+.modal h3{margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f label{display:block;font-size:11px;color:#6b7280;margin-bottom:3px}
+.f input,.f select,.f textarea{width:100%}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.sub{display:flex;gap:6px;align-items:center}
+.sub select{width:80px}
+.hint{color:#6b7280;font-size:11px;margin-top:4px}
+.dayev{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-bottom:4px;border-radius:6px;border:1px solid #e5e7eb}
+.dayev.done{background:#f3f4f6;color:#9ca3af}
+.dayev .del{cursor:pointer;color:#dc2626;margin-left:auto}
+.sch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e5e7eb;border-radius:8px;overflow:hidden}
+.sch-cell{background:#fff;min-height:88px;padding:5px 6px;cursor:pointer}
+.sch-cell:hover{background:#f8fafc}
+.sch-cell.out{background:#fafafa;color:#c9ccd1}
+.snap{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px}
+.snap .info{flex:1}
+.snap .tt{font-weight:600}
+.snap .dd2{color:#9ca3af;font-size:11px}
+.snap.manual{border-color:#fbbf24;background:#fffbeb}
+.cntTag{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600}
+.viewSwitch{display:flex;gap:0;border:1px solid #d1d5db;border-radius:6px;overflow:hidden}
+.viewSwitch button{border-radius:0;margin:0;background:#fff;color:#6b7280;padding:4px 10px;font-size:11px}
+.viewSwitch button.on{background:#2563eb;color:#fff}
+/* 配色面板 */
+.cgroup{margin-bottom:18px}
+.cgroup h4{margin:0 0 8px;font-size:13px;color:#374151;padding-bottom:6px;border-bottom:1px solid #f0f1f3}
+.crow{display:flex;align-items:center;gap:10px;padding:7px 0}
+.crow .cname{width:120px;font-size:12px;color:#4b5563;flex-shrink:0}
+.crow .prev{padding:3px 12px;border-radius:10px;font-size:11px;min-width:70px;text-align:center}
+.crow input[type=color]{width:42px;height:28px;padding:1px;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;background:#fff}
+.crow .clab{font-size:11px;color:#9ca3af;width:34px}
+.preset{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.preset button{display:flex;align-items:center;gap:5px;padding:6px 11px}
+.dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍂 秋招投递管家</h1>
+  <button class="btn-p" onclick="openEdit(null)">＋ 新增投递</button>
+  <button onclick="document.getElementById('fi').click()">📥 导入 Excel</button>
+  <input type="file" id="fi" accept=".xlsx" style="display:none" onchange="importXlsx(this)">
+  <button class="btn-g" onclick="exportXlsx()">📤 导出 Excel</button>
+  <button class="btn-c" onclick="openTheme()">🎨 配色</button>
+  <button class="btn-y" id="undoBtn" onclick="undo()">↩ 撤销</button>
+  <button onclick="openSnap()">🗂 存档</button>
+  <span style="flex:1"></span>
+  <span id="saveTip" style="font-size:11px;color:#9ca3af"></span>
+  <button class="btn-r" onclick="askClear()">清空</button>
+</header>
+
+<nav>
+  <div class="on" onclick="tab(0,this)">📊 统计看板</div>
+  <div onclick="tab(1,this)">📋 投递列表</div>
+  <div onclick="tab(2,this)">📅 面试日历</div>
+  <div onclick="tab(3,this)">🎯 面试时间表</div>
+</nav>
+
+<main>
+<section class="page on" id="p0">
+  <div class="cards" id="cards"></div>
+  <div class="panel"><h3>🎯 转化漏斗</h3><div class="funnel" id="funnel"></div></div>
+  <div class="panel"><h3>📍 Base 分布（多 base 取第一个）</h3><div id="baseChart"></div></div>
+  <div class="panel"><h3 id="activeTitle">🔥 流程中岗位</h3><div id="active"></div></div>
+</section>
+
+<section class="page" id="p1">
+  <div class="toolbar">
+    <input id="kw" placeholder="🔍 搜索公司/岗位/base" style="width:210px" oninput="render()">
+    <div class="msel" id="ms_progress"><button id="bt_progress" onclick="toggleMs('progress')">进度 ▾</button><div class="dd" id="dd_progress"></div></div>
+    <div class="msel" id="ms_base"><button id="bt_base" onclick="toggleMs('base')">Base ▾</button><div class="dd" id="dd_base"></div></div>
+    <div class="msel" id="ms_ver"><button id="bt_ver" onclick="toggleMs('ver')">简历版本 ▾</button><div class="dd" id="dd_ver"></div></div>
+    <div class="msel" id="ms_end"><button id="bt_end" onclick="toggleMs('end')">终止流程 ▾</button><div class="dd" id="dd_end"></div></div>
+    <div class="msel" id="ms_month"><button id="bt_month" onclick="toggleMs('month')">投递月份 ▾</button><div class="dd" id="dd_month"></div></div>
+    <button onclick="resetFilter()">重置筛选</button>
+    <button onclick="expandAll(1)">全部展开</button><button onclick="expandAll(0)">全部收起</button>
+    <span style="flex:1"></span><span id="cnt" style="color:#6b7280"></span>
+  </div>
+  <table><thead><tr>
+    <th style="width:18px"></th><th>公司</th><th>岗位</th><th>Base</th><th>投递日期</th>
+    <th>进度</th><th>终止流程</th><th>简历版本</th><th>链接</th><th style="width:76px">操作</th>
+  </tr></thead><tbody id="tb"></tbody></table>
+</section>
+
+<section class="page" id="p2">
+  <div class="cal-head">
+    <button onclick="mv(-1)">‹ 上月</button>
+    <b id="ymLabel" style="font-size:16px"></b>
+    <button onclick="mv(1)">下月 ›</button>
+    <button onclick="mv(0)">今天</button>
+    <span style="flex:1"></span>
+    <div class="viewSwitch">
+      <button class="on" onclick="setCalView(1,this)">当前进度</button>
+      <button onclick="setCalView(0,this)">原始安排</button>
+    </div>
+    <span class="ev r1">一面</span><span class="ev r2">二面</span><span class="ev r3">三面</span>
+    <span class="ev ai">AI面</span><span class="ev written">笔试</span><span class="ev assess">测评</span>
+    <span class="ev done">已完成</span>
+  </div>
+  <div class="cal" id="cal"></div>
+  <p class="hint">未完成按「一面→二面→三面→AI面→笔试→测评」排序。切「原始安排」看原始颜色，便于复盘。</p>
+</section>
+
+<section class="page" id="p3">
+  <div class="cal-head">
+    <button onclick="mvSch(-1)">‹ 上月</button>
+    <b id="ymLabel2" style="font-size:16px"></b>
+    <button onclick="mvSch(1)">下月 ›</button>
+    <button onclick="mvSch(0)">今天</button>
+    <span style="flex:1"></span>
+    <div class="viewSwitch">
+      <button class="on" onclick="setSchView(1,this)">当前进度</button>
+      <button onclick="setSchView(0,this)">原始安排</button>
+    </div>
+    <span class="sev r1">一面</span><span class="sev r2">二面</span><span class="sev r3">三面</span><span class="sev done">已完成</span>
+  </div>
+  <div class="sch-grid" id="sch"></div>
+  <p class="hint">只记录一/二/三面的时间段，勾选已完成后变灰、位置不变。</p>
+</section>
+</main>
+
+
+<div class="mask" id="m1"><div class="modal">
+  <h3 id="m1t">新增投递</h3>
+  <div class="f grid2">
+    <div><label>公司 *</label><input id="e_company"></div>
+    <div><label>岗位 *</label><input id="e_position"></div>
+    <div><label>Base（多个用 / 分隔）</label><input id="e_base"></div>
+    <div><label>投递简历日期</label><input id="e_apply" placeholder="如 8月20日"></div>
+    <div><label>进度</label><select id="e_progress"></select></div>
+    <div><label>终止流程于</label><input id="e_end" placeholder="简历 / 一面 ..."></div>
+    <div><label>规则</label><input id="e_rule" placeholder="可投3个"></div>
+    <div><label>简历版本</label><input id="e_ver"></div>
+    <div><label>有无附件简历</label><input id="e_att"></div>
+    <div><label>链接</label><input id="e_link"></div>
+  </div>
+  <h3 style="margin:18px 0 10px;font-size:13px">流程时间点</h3>
+  <div class="f grid2" id="stageBox"></div>
+  <div class="f" style="margin-top:10px"><label>备注</label><textarea id="e_note" rows="2"></textarea></div>
+  <div class="mfoot"><button onclick="close1()">取消</button><button class="btn-p" onclick="saveRow()">保存</button></div>
+</div></div>
+
+<div class="mask" id="m2"><div class="modal" style="width:min(520px,92vw)">
+  <h3 id="m2t"></h3>
+  <div id="dayList" style="margin-bottom:14px"></div>
+  <div class="f grid2">
+    <div style="grid-column:1/-1"><label>标题（公司+轮次）</label><input id="c_title" placeholder="如 快手 二面"></div>
+    <div><label>开始</label><input id="c_st" type="time" value="10:00"></div>
+    <div><label>结束</label><input id="c_et" type="time" value="11:00"></div>
+    <div style="grid-column:1/-1"><label>方式/备注</label><input id="c_note" placeholder="腾讯会议 / 现场"></div>
+  </div>
+  <div class="mfoot"><button onclick="close2()">关闭</button><button class="btn-p" onclick="addEvt()">添加安排</button></div>
+</div></div>
+
+<div class="mask" id="m3"><div class="modal" style="width:min(480px,92vw)">
+  <h3 id="m3t"></h3>
+  <div id="schList" style="margin-bottom:14px"></div>
+  <div class="f grid2">
+    <div style="grid-column:1/-1"><label>公司</label><input id="s_co" placeholder="如 快手"></div>
+    <div><label>轮次</label><select id="s_round"><option value="r1">一面</option><option value="r2">二面</option><option value="r3">三面</option></select></div>
+    <div><label>状态</label><select id="s_done"><option value="0">未完成</option><option value="1">已完成</option></select></div>
+    <div><label>开始</label><input id="s_st" type="time" value="10:00"></div>
+    <div><label>结束</label><input id="s_et" type="time" value="11:00"></div>
+    <div style="grid-column:1/-1"><label>方式/备注</label><input id="s_note" placeholder="腾讯会议 / 现场"></div>
+  </div>
+  <div class="mfoot"><button onclick="close3()">关闭</button><button class="btn-p" onclick="addSch()">添加安排</button></div>
+</div></div>
+
+<div class="mask" id="m4"><div class="modal" style="width:min(620px,92vw)">
+  <h3>🗂 存档管理（数据保险箱）</h3>
+  <div class="toolbar">
+    <button class="btn-y" onclick="manualSnap()">💾 立即存档</button>
+    <button class="btn-g" onclick="exportBackup()">⬇ 导出备份文件</button>
+    <button onclick="document.getElementById('bfi').click()">⬆ 从备份文件恢复</button>
+    <input type="file" id="bfi" accept=".json" style="display:none" onchange="importBackup(this)">
+  </div>
+  <p class="hint" style="margin-bottom:12px">导入 / 删除 / 清空 / 编辑前系统会<b>自动存档</b>，最多保留 30 份。黄色为手动存档，不会被挤掉。建议每周导出一次备份文件。</p>
+  <div id="snapList"></div>
+</div></div>
+
+<!-- 配色中心 -->
+<div class="mask" id="m5"><div class="modal" style="width:min(700px,94vw)">
+  <h3>🎨 配色中心</h3>
+  <div class="preset" id="presetBox"></div>
+  <div id="themeBox"></div>
+  <div class="mfoot">
+    <button onclick="resetTheme()">恢复默认</button>
+    <button class="btn-g" onclick="exportTheme()">⬇ 导出配色</button>
+    <button onclick="document.getElementById('tfi').click()">⬆ 导入配色</button>
+    <input type="file" id="tfi" accept=".json" style="display:none" onchange="importTheme(this)">
+    <button class="btn-p" onclick="close5()">完成</button>
+  </div>
+</div></div>
+
+<script>
+/* ============ 常量 ============ */
+const HEADERS=["公司","岗位","base","投递简历","进度","链接","规则","测评","AI面","笔试","一面","二面","三面","终止流程","简历版本","有无附件简历","备注"];
+const KEYS=["company","position","base","apply","progress","link","rule","assess","ai","written","r1","r2","r3","endAt","ver","att","note"];
+const STAGES=[["assess","测评"],["ai","AI面"],["written","笔试"],["r1","一面"],["r2","二面"],["r3","三面"]];
+const ORDER={r1:1,r2:2,r3:3,ai:4,written:5,assess:6};
+const PROGRESS=["","测评","AI面","笔试","一面","二面","三面","offer","挂"];
+const BLANK='（空白）';
+const MAX_SNAP=30;
+let DATA=[],EVENTS=[],SCHEDULE=[],SNAPS=[],editIdx=null,openSet=new Set(),curDay='',calDate=new Date(),schDate=new Date();
+let FILTER={progress:[],base:[],ver:[],end:[],month:[]};
+let CAL_VIEW_MODE=1,SCH_VIEW_MODE=1;
+
+/* ============ 配色系统 ============ */
+const THEME_DEF={
+  r1:{bg:'#fef3c7',fg:'#b45309'}, r2:{bg:'#dbeafe',fg:'#1d4ed8'}, r3:{bg:'#d1fae5',fg:'#047857'},
+  ai:{bg:'#c7d2fe',fg:'#4338ca'}, written:{bg:'#fbcfe8',fg:'#be185d'}, assess:{bg:'#fde68a',fg:'#92400e'},
+  offer:{bg:'#d1fae5',fg:'#047857'}, dead:{bg:'#fee2e2',fg:'#b91c1c'},
+  none:{bg:'#f3f4f6',fg:'#6b7280'}, done:{bg:'#e5e7eb',fg:'#9ca3af'},
+  endtext:{fg:'#dc2626'},
+  funnel:{c1:'#34d399',c2:'#059669'}, basebar:{c1:'#60a5fa',c2:'#2563eb'},
+  cardnum:{fg:'#2563eb'},
+  todoNode:{bg:'#fef9c3',fg:'#fde047'}, doneNode:{bg:'#dbeafe',fg:'#93c5fd'}
+};
+const THEME_META=[
+  {g:'流程轮次（日历 / 进度标签 / 计数）',items:[
+    ['r1','一面',1],['r2','二面',1],['r3','三面',1],
+    ['ai','AI面',1],['written','笔试',1],['assess','测评 / 其他进度',1]
+  ]},
+  {g:'状态',items:[
+    ['offer','Offer',1],['dead','已挂 / 终止',1],['none','待处理',1],['done','已完成（变灰）',1]
+  ]},
+  {g:'图表',items:[
+    ['funnel','转化漏斗',2],['basebar','Base 分布',2],['cardnum','看板大数字',3]
+  ]},
+  {g:'投递列表展开区',items:[
+    ['doneNode','已完成节点',4],['todoNode','待完成节点',4],['endtext','终止流程文字',3]
+  ]}
+];
+const PRESETS={
+  '默认':THEME_DEF,
+  '莫兰迪':{...THEME_DEF,
+    r1:{bg:'#f0e4d7',fg:'#8b6f52'},r2:{bg:'#dce6e8',fg:'#4a6d78'},r3:{bg:'#dde5db',fg:'#5a7259'},
+    ai:{bg:'#e2dced',fg:'#6b5b8c'},written:{bg:'#f2dfe0',fg:'#8c5f66'},assess:{bg:'#efe6d4',fg:'#87724a'},
+    offer:{bg:'#dde5db',fg:'#5a7259'},dead:{bg:'#ecdcdc',fg:'#8a5a5a'},
+    funnel:{c1:'#a8c0a5',c2:'#6f8b6c'},basebar:{c1:'#a9c1cc',c2:'#5f8494'},cardnum:{fg:'#5f8494'}},
+  '马卡龙':{...THEME_DEF,
+    r1:{bg:'#fff3c4',fg:'#a1751a'},r2:{bg:'#cfe8ff',fg:'#1462a8'},r3:{bg:'#c8f4dc',fg:'#12805a'},
+    ai:{bg:'#e0d4ff',fg:'#5b39b8'},written:{bg:'#ffd6e8',fg:'#b3306f'},assess:{bg:'#ffe0c2',fg:'#a35a17'},
+    offer:{bg:'#c8f4dc',fg:'#12805a'},dead:{bg:'#ffd4d4',fg:'#c22e2e'},
+    funnel:{c1:'#7dd3a8',c2:'#2fa572'},basebar:{c1:'#8ec5ff',c2:'#2b7fd4'},cardnum:{fg:'#2b7fd4'}},
+  '深邃':{...THEME_DEF,
+    r1:{bg:'#fde68a',fg:'#78350f'},r2:{bg:'#93c5fd',fg:'#1e3a8a'},r3:{bg:'#6ee7b7',fg:'#064e3b'},
+    ai:{bg:'#a5b4fc',fg:'#312e81'},written:{bg:'#f9a8d4',fg:'#831843'},assess:{bg:'#fcd34d',fg:'#78350f'},
+    offer:{bg:'#6ee7b7',fg:'#064e3b'},dead:{bg:'#fca5a5',fg:'#7f1d1d'},
+    funnel:{c1:'#10b981',c2:'#047857'},basebar:{c1:'#3b82f6',c2:'#1e40af'},cardnum:{fg:'#1e40af'}}
+};
+let THEME=JSON.parse(JSON.stringify(THEME_DEF));
+function applyTheme(){
+  const s=document.documentElement.style,T=THEME;
+  ['r1','r2','r3','ai','written','assess','offer','dead','none','done'].forEach(k=>{
+    s.setProperty('--c-'+k,T[k].bg);s.setProperty('--t-'+k,T[k].fg);});
+  s.setProperty('--c-endtext',T.endtext.fg);
+  s.setProperty('--f1',T.funnel.c1);s.setProperty('--f2',T.funnel.c2);
+  s.setProperty('--b1',T.basebar.c1);s.setProperty('--b2',T.basebar.c2);
+  s.setProperty('--c-card',T.cardnum.fg);
+  s.setProperty('--c-todo',T.todoNode.bg);s.setProperty('--c-todo-b',T.todoNode.fg);
+  s.setProperty('--c-doneNode',T.doneNode.bg);s.setProperty('--c-doneNode-b',T.doneNode.fg);
+  localStorage.setItem('qz_theme',JSON.stringify(THEME));
+}
+function openTheme(){renderTheme();document.getElementById('m5').classList.add('on');}
+function close5(){document.getElementById('m5').classList.remove('on');}
+function renderTheme(){
+  document.getElementById('presetBox').innerHTML='<span style="font-size:12px;color:#6b7280;align-self:center;margin-right:4px">快速套用：</span>'+
+    Object.keys(PRESETS).map(p=>{const t=PRESETS[p];
+      return`<button onclick="usePreset('${p}')">
+        <span class="dot" style="background:${t.r1.bg}"></span><span class="dot" style="background:${t.r2.bg}"></span><span class="dot" style="background:${t.r3.bg}"></span>${p}</button>`}).join('');
+  document.getElementById('themeBox').innerHTML=THEME_META.map(g=>
+    `<div class="cgroup"><h4>${g.g}</h4>`+g.items.map(([k,label,type])=>{
+      const t=THEME[k];
+      if(type===1)return`<div class="crow"><span class="cname">${label}</span>
+        <span class="prev" style="background:${t.bg};color:${t.fg}">${label}</span>
+        <span class="clab">底色</span><input type="color" value="${t.bg}" oninput="setC('${k}','bg',this.value)">
+        <span class="clab">文字</span><input type="color" value="${t.fg}" oninput="setC('${k}','fg',this.value)"></div>`;
+      if(type===2)return`<div class="crow"><span class="cname">${label}</span>
+        <span class="prev" style="background:linear-gradient(90deg,${t.c1},${t.c2});color:#fff;min-width:110px">渐变预览</span>
+        <span class="clab">起</span><input type="color" value="${t.c1}" oninput="setC('${k}','c1',this.value)">
+        <span class="clab">止</span><input type="color" value="${t.c2}" oninput="setC('${k}','c2',this.value)"></div>`;
+      if(type===3)return`<div class="crow"><span class="cname">${label}</span>
+        <span class="prev" style="color:${t.fg};font-weight:700;background:#f9fafb">示例 128</span>
+        <span class="clab">颜色</span><input type="color" value="${t.fg}" oninput="setC('${k}','fg',this.value)"></div>`;
+      return`<div class="crow"><span class="cname">${label}</span>
+        <span class="prev" style="background:${t.bg};border:1px solid ${t.fg};color:#374151">节点</span>
+        <span class="clab">底色</span><input type="color" value="${t.bg}" oninput="setC('${k}','bg',this.value)">
+        <span class="clab">边框</span><input type="color" value="${t.fg}" oninput="setC('${k}','fg',this.value)"></div>`;
+    }).join('')+`</div>`).join('');
+}
+function setC(k,f,v){THEME[k][f]=v;applyTheme();renderTheme();render();}
+function usePreset(p){THEME=JSON.parse(JSON.stringify(PRESETS[p]));applyTheme();renderTheme();render();}
+function resetTheme(){if(confirm('恢复默认配色？')){THEME=JSON.parse(JSON.stringify(THEME_DEF));applyTheme();renderTheme();render();}}
+function exportTheme(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(THEME,null,2)],{type:'application/json'}));
+  a.download='秋招管家配色.json';a.click();
+}
+function importTheme(inp){
+  const f=inp.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=e=>{try{const j=JSON.parse(e.target.result);
+    Object.keys(THEME_DEF).forEach(k=>{if(j[k])THEME[k]={...THEME_DEF[k],...j[k]}});
+    applyTheme();renderTheme();render();alert('配色已应用 ✅');
+  }catch(err){alert('配色文件格式错误');}};
+  rd.readAsText(f);inp.value='';
+}
+
+/* ============ 存储 ============ */
+function save(){
+  localStorage.setItem('qz_data',JSON.stringify(DATA));
+  localStorage.setItem('qz_evt',JSON.stringify(EVENTS));
+  localStorage.setItem('qz_sch',JSON.stringify(SCHEDULE));
+  document.getElementById('saveTip').textContent='已保存 '+new Date().toLocaleTimeString('zh-CN');
+}
+function saveSnaps(){try{localStorage.setItem('qz_snaps',JSON.stringify(SNAPS));}catch(e){
+  SNAPS=SNAPS.slice(0,10);try{localStorage.setItem('qz_snaps',JSON.stringify(SNAPS));}catch(e2){}}}
+function load(){
+  try{
+    DATA=JSON.parse(localStorage.getItem('qz_data')||'[]');
+    EVENTS=JSON.parse(localStorage.getItem('qz_evt')||'[]');
+    SCHEDULE=JSON.parse(localStorage.getItem('qz_sch')||'[]');
+    SNAPS=JSON.parse(localStorage.getItem('qz_snaps')||'[]');
+    const t=localStorage.getItem('qz_theme');
+    if(t){const j=JSON.parse(t);Object.keys(THEME_DEF).forEach(k=>{if(j[k])THEME[k]={...THEME_DEF[k],...j[k]}});}
+  }catch(e){}
+  applyTheme();
+}
+
+/* ============ 存档 / 撤销 ============ */
+function snapshot(label,manual){
+  SNAPS.unshift({t:Date.now(),label:label||'自动存档',manual:!!manual,
+    n:DATA.length,DATA:JSON.parse(JSON.stringify(DATA)),
+    EVENTS:JSON.parse(JSON.stringify(EVENTS)),SCHEDULE:JSON.parse(JSON.stringify(SCHEDULE))});
+  const man=SNAPS.filter(s=>s.manual),auto=SNAPS.filter(s=>!s.manual).slice(0,MAX_SNAP-Math.min(man.length,10));
+  SNAPS=[...man.slice(0,10),...auto].sort((a,b)=>b.t-a.t);
+  saveSnaps();refreshUndo();
+}
+function manualSnap(){snapshot('手动存档（'+DATA.length+' 条）',true);renderSnaps();alert('已存档 ✅');}
+function refreshUndo(){
+  const b=document.getElementById('undoBtn');
+  b.disabled=SNAPS.length===0;
+  b.textContent=SNAPS.length?`↩ 撤销（${SNAPS.length}）`:'↩ 撤销';
+}
+function undo(){
+  if(!SNAPS.length)return alert('没有可撤销的记录');
+  const s=SNAPS[0];
+  if(!confirm(`撤销到「${s.label}」\n时间：${new Date(s.t).toLocaleString('zh-CN')}\n将恢复 ${s.n} 条投递记录，当前数据会被覆盖。继续？`))return;
+  DATA=JSON.parse(JSON.stringify(s.DATA));EVENTS=JSON.parse(JSON.stringify(s.EVENTS));SCHEDULE=JSON.parse(JSON.stringify(s.SCHEDULE));
+  SNAPS.shift();saveSnaps();openSet=new Set();render();refreshUndo();
+}
+function openSnap(){renderSnaps();document.getElementById('m4').classList.add('on');}
+function renderSnaps(){
+  document.getElementById('snapList').innerHTML=SNAPS.length?SNAPS.map((s,i)=>
+    `<div class="snap ${s.manual?'manual':''}"><div class="info">
+      <div class="tt">${s.manual?'💾 ':''}${esc(s.label)}</div>
+      <div class="dd2">${new Date(s.t).toLocaleString('zh-CN')} ｜ ${s.n} 条投递 ｜ ${s.EVENTS.length} 条日历 ｜ ${s.SCHEDULE.length} 条面试</div>
+    </div>
+    <button class="btn-p" onclick="restore(${i})">恢复</button>
+    <button onclick="SNAPS.splice(${i},1);saveSnaps();renderSnaps();refreshUndo()">删除</button></div>`).join('')
+    :'<p class="hint">暂无存档</p>';
+}
+function restore(i){
+  const s=SNAPS[i];
+  if(!confirm(`恢复到「${s.label}」？\n${new Date(s.t).toLocaleString('zh-CN')} ｜ ${s.n} 条\n当前数据会先自动存档一份。`))return;
+  snapshot('恢复前自动存档');
+  DATA=JSON.parse(JSON.stringify(s.DATA));EVENTS=JSON.parse(JSON.stringify(s.EVENTS));SCHEDULE=JSON.parse(JSON.stringify(s.SCHEDULE));
+  openSet=new Set();render();renderSnaps();alert('已恢复 ✅');
+}
+function exportBackup(){
+  const blob=new Blob([JSON.stringify({ver:2,time:new Date().toISOString(),DATA,EVENTS,SCHEDULE,SNAPS,THEME},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='秋招管家备份_'+ymd(new Date())+'.json';a.click();
+}
+function importBackup(inp){
+  const f=inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      const j=JSON.parse(e.target.result);
+      if(!j.DATA)throw new Error('文件格式不对');
+      if(!confirm(`备份含 ${j.DATA.length} 条投递记录\n备份时间：${j.time?new Date(j.time).toLocaleString('zh-CN'):'未知'}\n确认恢复？当前数据会先自动存档。`))return;
+      snapshot('恢复备份前自动存档');
+      DATA=j.DATA||[];EVENTS=j.EVENTS||[];SCHEDULE=j.SCHEDULE||[];
+      if(j.THEME){Object.keys(THEME_DEF).forEach(k=>{if(j.THEME[k])THEME[k]={...THEME_DEF[k],...j.THEME[k]}});applyTheme();}
+      if(j.SNAPS&&Array.isArray(j.SNAPS))SNAPS=[...SNAPS,...j.SNAPS].sort((a,b)=>b.t-a.t).slice(0,MAX_SNAP);
+      saveSnaps();openSet=new Set();render();renderSnaps();alert('恢复成功 ✅');
+    }catch(err){alert('恢复失败：'+err.message);}
+  };
+  rd.readAsText(f);inp.value='';
+}
+function askClear(){
+  if(!DATA.length&&!EVENTS.length&&!SCHEDULE.length)return alert('当前没有数据');
+  const t=prompt(`⚠️ 危险操作\n将清空 ${DATA.length} 条投递记录。\n（系统会自动存档，可用「撤销」找回）\n\n请输入「清空」两个字确认：`);
+  if(t===null)return;
+  if(t.trim()!=='清空')return alert('已取消');
+  snapshot('清空前自动存档（'+DATA.length+' 条）',true);
+  DATA=[];EVENTS=[];SCHEDULE=[];openSet=new Set();resetFilter();
+  alert('已清空。如误操作，点右上角「↩ 撤销」即可找回 ✅');
+}
+window.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){e.preventDefault();undo();}
+});
+
+/* ============ 工具 ============ */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const has=v=>!!String(v||'').trim();
+const isDead=r=>r.progress==='挂'||has(r.endAt);
+function firstBase(b){let s=String(b||'').replace(/[／]/g,'/').split(/[\/、,，;；]/)[0];return s.replace(/\s+/g,'').trim()||'未填';}
+function pDate(v){
+  if(!v)return null;v=String(v).trim();const Y=new Date().getFullYear();
+  let m=v.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*日/);if(m)return new Date(Y,+m[1]-1,+m[2]);
+  m=v.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=v.match(/^(\d{1,2})[.](\d{1,2})$/);if(m)return new Date(Y,+m[1]-1,+m[2]);
+  return null;
+}
+const ymd=d=>d?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'):'';
+const ymOf=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+
+/* ============ 多选筛选 ============ */
+const OPT_CACHE={};
+function optsOf(k){
+  if(k==='progress')return PROGRESS.filter(Boolean).concat([BLANK]);
+  if(k==='base')return[...new Set(DATA.map(r=>firstBase(r.base)))].sort((a,b)=>a.localeCompare(b,'zh'));
+  if(k==='ver')return[...new Set(DATA.map(r=>(r.ver||'').trim()||BLANK))].sort((a,b)=>a.localeCompare(b,'zh'));
+  if(k==='end')return[...new Set(DATA.map(r=>(r.endAt||'').trim()||BLANK))].sort((a,b)=>a.localeCompare(b,'zh'));
+  if(k==='month')return[...new Set(DATA.map(r=>{const d=pDate(r.apply);return d?ymOf(d):BLANK}))].sort();
+  return[];
+}
+function toggleMs(k){document.querySelectorAll('.msel').forEach(el=>{if(el.id!=='ms_'+k)el.classList.remove('on')});document.getElementById('ms_'+k).classList.toggle('on');}
+function updateMs(){
+  ['progress','base','ver','end','month'].forEach(k=>{
+    const opts=optsOf(k);OPT_CACHE[k]=opts;const sel=FILTER[k];const allChecked=sel.length===0||sel.length===opts.length;
+    document.getElementById('dd_'+k).innerHTML=
+      `<label class="all"><input type="checkbox" ${allChecked?'checked':''} onchange="selAll('${k}',this.checked)">全选（${opts.length}）</label>`+
+      opts.map(o=>`<label><input type="checkbox" ${sel.length===0||sel.includes(o)?'checked':''} onchange="togFilter('${k}',this.value)" value="${esc(o)}">${esc(o)}</label>`).join('');
+    const btn=document.getElementById('bt_'+k);const label={progress:'进度',base:'Base',ver:'简历版本',end:'终止流程',month:'投递月份'}[k];
+    const active=sel.length>0&&sel.length<opts.length;btn.textContent=active?`${label}(${sel.length}) ▾`:`${label} ▾`;btn.className=active?'act':'';
+  });
+}
+function selAll(k,ck){FILTER[k]=ck?[]:['__NONE__'];render();}
+function togFilter(k,v){
+  let sel=FILTER[k];const opts=OPT_CACHE[k]||optsOf(k);
+  if(sel.length===0)sel=[...opts];if(sel[0]==='__NONE__')sel=[];
+  const i=sel.indexOf(v);if(i>=0)sel.splice(i,1);else sel.push(v);
+  FILTER[k]=(sel.length===opts.length)?[]:(sel.length?sel:['__NONE__']);render();
+}
+function passFilter(k,val){const sel=FILTER[k];if(sel.length===0)return true;if(sel[0]==='__NONE__')return false;return sel.includes(val);}
+function resetFilter(){FILTER={progress:[],base:[],ver:[],end:[],month:[]};document.getElementById('kw').value='';render();}
+document.addEventListener('click',e=>{if(!e.target.closest('.msel'))document.querySelectorAll('.msel').forEach(el=>el.classList.remove('on'));});
+
+/* ============ 统计 ============ */
+function stats(){
+  const n=DATA.length;
+  const c=k=>DATA.filter(r=>has(r[k])).length;
+  const pre=DATA.filter(r=>has(r.assess)||has(r.ai)||has(r.written)).length;
+  const r1=c('r1'),r2=c('r2'),r3=c('r3');
+  const off=DATA.filter(r=>r.progress==='offer').length;
+  const active=DATA.filter(r=>['一面','二面','三面'].includes(r.progress)&&!isDead(r));
+  const dead=DATA.filter(isDead).length;
+  const pc=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+  return{n,pre,r1,r2,r3,off,dead,active,
+    ratePre:pc(pre,n),rate1:pc(r1,n),rate2:pc(r2,r1),rate3:pc(r3,r2),rateOff:pc(off,n)};
+}
+function drawBoard(){
+  const s=stats();
+  document.getElementById('cards').innerHTML=[
+    ['投递岗位',s.n,''],
+    ['收到测评/笔试/AI面',s.pre,'测评率 '+s.ratePre],
+    ['收到一面',s.r1,'一面率 '+s.rate1],
+    ['进入二面',s.r2,'一面通过率 '+s.rate2],
+    ['进入三面',s.r3,'二面通过率 '+s.rate3],
+    ['Offer',s.off,'offer率 '+s.rateOff],
+    ['流程中',s.active.length,'一/二/三面'],
+    ['已终止',s.dead,'']
+  ].map(([l,n,sub])=>`<div class="card"><div class="n">${n}</div><div class="l">${l}</div><div class="s">${sub}</div></div>`).join('');
+
+  const f=[['投递',s.n,'100%'],['测评/笔试/AI面',s.pre,'测评率 '+s.ratePre],['一面',s.r1,'一面率 '+s.rate1],['二面',s.r2,'一面通过率 '+s.rate2],
+           ['三面',s.r3,'二面通过率 '+s.rate3],['Offer',s.off,'offer率 '+s.rateOff]];
+  document.getElementById('funnel').innerHTML=f.map(([k,v,r])=>
+    `<div class="bar-row"><span class="nm">${k}</span><div class="bar-out"><div class="bar-in" style="width:${s.n?v/s.n*100:0}%"></div></div><span class="vv">${v} <span style="color:#9ca3af;font-size:11px">${r}</span></span></div>`).join('');
+
+  const mp={};DATA.forEach(r=>{const b=firstBase(r.base);mp[b]=(mp[b]||0)+1});
+  const arr=Object.entries(mp).sort((a,b)=>b[1]-a[1]),mx=arr[0]?arr[0][1]:1;
+  document.getElementById('baseChart').innerHTML=arr.map(([k,v])=>
+    `<div class="bar-row"><span class="nm">${esc(k)}</span><div class="bar-out"><div class="bar-in" style="width:${v/mx*100}%"></div></div><span class="vv">${v} <span style="color:#9ca3af;font-size:11px">${(v/DATA.length*100).toFixed(0)}%</span></span></div>`).join('')||'<p class="hint">暂无数据</p>';
+
+  const RANK={'三面':1,'二面':2,'一面':3};
+  const sorted=[...s.active].sort((a,b)=>(RANK[a.progress]||9)-(RANK[b.progress]||9)||(a.company||'').localeCompare(b.company||'','zh'));
+  const n1=s.active.filter(r=>r.progress==='一面').length;
+  const n2=s.active.filter(r=>r.progress==='二面').length;
+  const n3=s.active.filter(r=>r.progress==='三面').length;
+  document.getElementById('activeTitle').innerHTML=
+    `🔥 流程中岗位 <span style="color:#9ca3af;font-weight:400">共 ${s.active.length} 个</span>
+     <span class="cntTag t-r3">三面 ${n3}</span>
+     <span class="cntTag t-r2">二面 ${n2}</span>
+     <span class="cntTag t-r1">一面 ${n1}</span>`;
+  document.getElementById('active').innerHTML=sorted.length?
+    `<table><thead><tr><th>公司</th><th>岗位</th><th>Base</th><th>当前进度</th><th>最近节点</th></tr></thead><tbody>`+
+    sorted.map(r=>{
+      const last=[...STAGES].reverse().find(([k])=>has(r[k]));
+      const cls=r.progress==='一面'?'t-r1':r.progress==='二面'?'t-r2':'t-r3';
+      return`<tr><td><b>${esc(r.company)}</b></td><td>${esc(r.position)}</td><td>${esc(r.base)}</td><td><span class="tag ${cls}">${r.progress}</span></td><td>${last?last[1]+' '+esc(r[last[0]]):'—'}</td></tr>`;
+    }).join('')+`</tbody></table>`:'<p class="hint">当前没有在流程中的岗位</p>';
+}
+function tag(r){
+  const p=r.progress||'';
+  if(p==='挂')return'<span class="tag t-out">挂</span>';
+  if(p==='offer')return'<span class="tag t-off">Offer 🎉</span>';
+  if(p==='一面')return'<span class="tag t-r1">一面</span>';
+  if(p==='二面')return'<span class="tag t-r2">二面</span>';
+  if(p==='三面')return'<span class="tag t-r3">三面</span>';
+  if(p==='AI面')return'<span class="tag t-ai">AI面</span>';
+  if(p==='笔试')return'<span class="tag t-written">笔试</span>';
+  if(p==='测评')return'<span class="tag t-assess">测评</span>';
+  if(p)return`<span class="tag t-mid">${p}</span>`;
+  return'<span class="tag t-none">待处理</span>';
+}
+
+/* ============ 列表 ============ */
+function render(){
+  drawBoard();updateMs();refreshUndo();
+  const kw=(document.getElementById('kw').value||'').toLowerCase();
+  const list=DATA.map((r,i)=>({r,i})).filter(({r})=>{
+    if(kw&&!((r.company||'')+(r.position||'')+(r.base||'')).toLowerCase().includes(kw))return false;
+    if(!passFilter('progress',r.progress||BLANK))return false;
+    if(!passFilter('base',firstBase(r.base)))return false;
+    if(!passFilter('ver',(r.ver||'').trim()||BLANK))return false;
+    if(!passFilter('end',(r.endAt||'').trim()||BLANK))return false;
+    const d=pDate(r.apply);if(!passFilter('month',d?ymOf(d):BLANK))return false;
+    return true;
+  });
+  document.getElementById('cnt').textContent=`共 ${list.length} 条 / 总 ${DATA.length} 条`;
+  document.getElementById('tb').innerHTML=list.map(({r,i})=>{
+    const op=openSet.has(i);
+    return`<tr class="main">
+      <td><span class="exp" onclick="tg(${i})">${op?'▾':'▸'}</span></td>
+      <td><b>${esc(r.company)}</b></td><td>${esc(r.position)}</td><td>${esc(r.base)}</td>
+      <td>${esc(r.apply)}</td><td>${tag(r)}</td><td>${has(r.endAt)?`<span class="red">${esc(r.endAt)}</span>`:''}</td>
+      <td>${esc(r.ver)}</td>
+      <td>${r.link&&/^https?:/.test(r.link)?`<a href="${esc(r.link)}" target="_blank">链接↗</a>`:esc(r.link)}</td>
+      <td><button onclick="openEdit(${i})">编辑</button><button onclick="del(${i})" style="color:#dc2626">删</button></td>
+    </tr>`+(op?`<tr class="detail"><td colspan="10"><div class="tl">${
+      STAGES.map(([k,l])=>{const v=r[k],cls=has(v)?(r[k+'_done']===false?'todo':'done'):'empty';
+        return`<div class="node ${cls}"><div class="k">${l}</div><div class="v">${has(v)?esc(v):'—'}</div></div>`}).join('')
+      }</div><div class="hint" style="margin-top:8px">规则：${esc(r.rule)||'—'} ｜ 附件简历：${esc(r.att)||'—'} ｜ 备注：${esc(r.note)||'—'}</div></td></tr>`:'');
+  }).join('')||'<tr><td colspan="10" style="text-align:center;padding:30px;color:#9ca3af">暂无数据，请导入 Excel 或新增投递</td></tr>';
+  drawCal();drawSch();save();
+}
+function tg(i){openSet.has(i)?openSet.delete(i):openSet.add(i);render();}
+function expandAll(f){openSet=f?new Set(DATA.map((_,i)=>i)):new Set();render();}
+function del(i){
+  const r=DATA[i];
+  if(confirm(`删除「${r.company} - ${r.position}」？\n（可用「撤销」找回）`)){
+    snapshot(`删除「${r.company}-${r.position}」前`);
+    DATA.splice(i,1);openSet=new Set();render();
+  }
+}
+
+/* ============ 编辑 ============ */
+function openEdit(i){
+  editIdx=i;const r=i==null?{}:DATA[i];
+  document.getElementById('m1t').textContent=i==null?'新增投递':'编辑投递';
+  document.getElementById('e_progress').innerHTML=PROGRESS.map(p=>`<option value="${p}"${p===(r.progress||'')?' selected':''}>${p||BLANK}</option>`).join('');
+  [['company','company'],['position','position'],['base','base'],['apply','apply'],['end','endAt'],['rule','rule'],['ver','ver'],['att','att'],['link','link'],['note','note']]
+    .forEach(([id,k])=>document.getElementById('e_'+id).value=r[k]||'');
+  document.getElementById('stageBox').innerHTML=STAGES.map(([k,l])=>
+    `<div><label>${l}</label><div class="sub"><input id="s_${k}" value="${esc(r[k]||'')}" placeholder="如 8月20日">
+    <select id="d_${k}"><option value="1"${r[k+'_done']===false?'':' selected'}>已完成</option><option value="0"${r[k+'_done']===false?' selected':''}>待完成</option></select></div></div>`).join('');
+  document.getElementById('m1').classList.add('on');
+}
+function close1(){document.getElementById('m1').classList.remove('on');}
+function saveRow(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('e_company')||!g('e_position'))return alert('公司和岗位必填');
+  if(editIdx!=null)snapshot(`编辑「${DATA[editIdx].company}」前`);
+  const o={company:g('e_company'),position:g('e_position'),base:g('e_base'),apply:g('e_apply'),
+    progress:g('e_progress'),link:g('e_link'),rule:g('e_rule'),endAt:g('e_end'),
+    ver:g('e_ver'),att:g('e_att'),note:g('e_note')};
+  STAGES.forEach(([k])=>{o[k]=g('s_'+k);o[k+'_done']=document.getElementById('d_'+k).value==='1';});
+  if(editIdx==null)DATA.push(o);else DATA[editIdx]=o;
+  close1();render();
+}
+
+/* ============ 面试日历 ============ */
+function mv(d){if(d===0)calDate=new Date();else calDate.setMonth(calDate.getMonth()+d);drawCal();}
+function autoEvents(){
+  const out=[];
+  DATA.forEach((r,ri)=>STAGES.forEach(([k,l])=>{
+    if(!has(r[k]))return;const d=pDate(r[k]);if(!d)return;
+    out.push({date:ymd(d),title:(r.company||'')+' '+l,type:k,auto:1,ri,sk:k,done:r[k+'_done']!==false});
+  }));return out;
+}
+function evClass(e){
+  if(CAL_VIEW_MODE===1&&e.done)return'done';
+  return e.type&&ORDER[e.type]?e.type:'auto';
+}
+function sortEvs(arr){
+  const un=arr.filter(e=>!e.done).sort((a,b)=>(ORDER[a.type]||99)-(ORDER[b.type]||99));
+  return[...un,...arr.filter(e=>e.done)];
+}
+function setCalView(m,el){
+  CAL_VIEW_MODE=m;
+  el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');drawCal();
+}
+function drawCal(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  document.getElementById('ymLabel').textContent=`${y} 年 ${m+1} 月`;
+  const first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());
+  const all=[...autoEvents(),...EVENTS];const today=ymd(new Date());
+  let h=['日','一','二','三','四','五','六'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<42;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);const key=ymd(d);
+    const evs=sortEvs(all.filter(e=>e.date===key));
+    h+=`<div class="cell ${d.getMonth()!==m?'out':''} ${key===today?'today':''}" onclick="openDay('${key}')">
+      <span class="dn">${d.getDate()}</span>
+      ${evs.slice(0,4).map(e=>`<div class="ev ${evClass(e)}" title="${esc(e.title)}">${e.time?e.time+' ':''}${esc(e.title)}</div>`).join('')}
+      ${evs.length>4?`<div class="hint">+${evs.length-4}</div>`:''}</div>`;
+  }
+  document.getElementById('cal').innerHTML=h;
+}
+function openDay(k){
+  curDay=k;document.getElementById('m2t').textContent=k+' 面试安排';
+  const auto=sortEvs(autoEvents().filter(e=>e.date===k));
+  const mine=sortEvs(EVENTS.map((e,i)=>({...e,idx:i})).filter(o=>o.date===k));
+  document.getElementById('dayList').innerHTML=
+    (auto.length?'<div class="hint">来自投递表（勾选=已完成）：</div>'+auto.map(e=>
+      `<div class="dayev ${e.done?'done':''}"><input type="checkbox" ${e.done?'checked':''} onchange="togAuto(${e.ri},'${e.sk}',this.checked)"><span>${esc(e.title)}</span></div>`).join(''):'')
+    +(mine.length?'<div class="hint" style="margin-top:8px">我的安排：</div>'+mine.map(o=>
+      `<div class="dayev ${o.done?'done':''}"><input type="checkbox" ${o.done?'checked':''} onchange="EVENTS[${o.idx}].done=this.checked;save();openDay('${k}');drawCal()">
+       <span>${o.time||''} ${esc(o.title)} ${esc(o.note||'')}</span>
+       <span class="del" onclick="EVENTS.splice(${o.idx},1);save();openDay('${k}');drawCal()">✕</span></div>`).join(''):'')
+    ||'<p class="hint">当天暂无安排</p>';
+  document.getElementById('m2').classList.add('on');
+}
+function togAuto(ri,sk,ck){DATA[ri][sk+'_done']=ck;save();openDay(curDay);drawCal();render();}
+function close2(){document.getElementById('m2').classList.remove('on');}
+function addEvt(){
+  const t=document.getElementById('c_title').value.trim();if(!t)return alert('请填标题');
+  const typ=/一面/.test(t)?'r1':/二面/.test(t)?'r2':/三面/.test(t)?'r3':/AI/i.test(t)?'ai':/笔试/.test(t)?'written':/测评/.test(t)?'assess':'';
+  EVENTS.push({date:curDay,title:t,type:typ,time:document.getElementById('c_st').value+'-'+document.getElementById('c_et').value,
+    note:document.getElementById('c_note').value.trim(),done:false});
+  document.getElementById('c_title').value='';document.getElementById('c_note').value='';
+  save();openDay(curDay);drawCal();
+}
+
+/* ============ 面试时间表 ============ */
+function mvSch(d){if(d===0)schDate=new Date();else schDate.setMonth(schDate.getMonth()+d);drawSch();}
+const roundName=r=>r==='r1'?'一面':r==='r2'?'二面':'三面';
+function setSchView(m,el){
+  SCH_VIEW_MODE=m;
+  el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');drawSch();
+}
+function drawSch(){
+  const y=schDate.getFullYear(),m=schDate.getMonth();
+  document.getElementById('ymLabel2').textContent=`${y} 年 ${m+1} 月`;
+  const first=new Date(y,m,1),start=new Date(first);start.setDate(1-first.getDay());
+  const today=ymd(new Date());
+  let h=['日','一','二','三','四','五','六'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<42;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);const key=ymd(d);
+    const evs=SCHEDULE.filter(e=>e.date===key).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    h+=`<div class="sch-cell ${d.getMonth()!==m?'out':''} ${key===today?'today':''}" onclick="openSch('${key}')">
+      <span class="dn">${d.getDate()}</span>
+      ${evs.map(e=>{
+        const cls=(SCH_VIEW_MODE===1&&e.done)?'done':e.round;
+        return`<div class="sev ${cls}" title="${esc(e.company)} ${roundName(e.round)}">${e.time} ${esc(e.company)}</div>`;
+      }).join('')}</div>`;
+  }
+  document.getElementById('sch').innerHTML=h;
+}
+function openSch(k){
+  curDay=k;document.getElementById('m3t').textContent=k+' 面试安排（一/二/三面）';
+  const list=SCHEDULE.map((e,i)=>({...e,idx:i})).filter(o=>o.date===k).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  document.getElementById('schList').innerHTML=list.length?
+    list.map(o=>`<div class="dayev ${o.done?'done':''}"><input type="checkbox" ${o.done?'checked':''} onchange="SCHEDULE[${o.idx}].done=this.checked;save();drawSch();openSch('${k}')">
+      <span>${o.time} ${esc(o.company)} ${roundName(o.round)} ${esc(o.note||'')}</span>
+      <span class="del" onclick="SCHEDULE.splice(${o.idx},1);save();drawSch();openSch('${k}')">✕</span></div>`).join('')
+    :'<p class="hint">当天暂无安排</p>';
+  document.getElementById('m3').classList.add('on');
+}
+function close3(){document.getElementById('m3').classList.remove('on');}
+function addSch(){
+  const co=document.getElementById('s_co').value.trim();if(!co)return alert('请填公司');
+  SCHEDULE.push({date:curDay,company:co,round:document.getElementById('s_round').value,
+    time:document.getElementById('s_st').value+'-'+document.getElementById('s_et').value,
+    note:document.getElementById('s_note').value.trim(),done:document.getElementById('s_done').value==='1'});
+  document.getElementById('s_co').value='';document.getElementById('s_note').value='';
+  save();drawSch();openSch(curDay);
+}
+
+/* ============ 导入 ============ */
+const YEL=a=>a&&/(FFFF00|FFFF99|FFE699|FFD966|FFF2CC|FFEB9C)/i.test(a);
+const BLU=a=>a&&/(00B0F0|9DC3E6|BDD7EE|DDEBF7|ADD8E6|8EA9DB|B4C6E7)/i.test(a);
+function cellText(c){
+  if(c==null||c.value==null)return'';let v=c.value;
+  if(v instanceof Date)return (v.getMonth()+1)+'月'+v.getDate()+'日';
+  if(typeof v==='object'){if(v.text)v=v.text;else if(v.richText)v=v.richText.map(t=>t.text).join('');else if(v.result!=null)v=v.result;else if(v.hyperlink)v=v.hyperlink;else v='';}
+  return String(v).trim();
+}
+async function importXlsx(inp){
+  const file=inp.files[0];if(!file)return;
+  try{
+    const wb=new ExcelJS.Workbook();await wb.xlsx.load(await file.arrayBuffer());
+    const ws=wb.getWorksheet('秋招')||wb.worksheets[0];
+    let hr=0;ws.eachRow((row,n)=>{if(!hr&&cellText(row.getCell(1))==='公司'&&cellText(row.getCell(2))==='岗位')hr=n;});if(!hr)hr=1;
+    const colIdx={};ws.getRow(hr).eachCell((c,n)=>{const t=cellText(c);const idx=HEADERS.indexOf(t);if(idx>=0)colIdx[KEYS[idx]]=n;});
+    const rows=[];let lastCo='';
+    for(let n=hr+1;n<=ws.rowCount;n++){
+      const row=ws.getRow(n);const o={};
+      KEYS.forEach(k=>{o[k]=colIdx[k]?cellText(row.getCell(colIdx[k])):'';});
+      if(!o.company&&!o.position)continue;
+      if(o.company)lastCo=o.company;else o.company=lastCo;
+      STAGES.forEach(([k])=>{
+        if(!colIdx[k]){o[k+'_done']=has(o[k]);return;}
+        const c=row.getCell(colIdx[k]);const fill=c.fill&&c.fill.fgColor&&c.fill.fgColor.argb;
+        if(YEL(fill))o[k+'_done']=false;else if(BLU(fill))o[k+'_done']=true;else o[k+'_done']=has(o[k]);
+      });
+      rows.push(o);
+    }
+    if(DATA.length&&!confirm(`当前已有 ${DATA.length} 条记录，导入会覆盖。\n（会自动存档，可撤销）继续？`)){inp.value='';return;}
+    if(DATA.length)snapshot(`导入前自动存档（${DATA.length} 条）`,true);
+    DATA=rows;openSet=new Set();resetFilter();
+    alert(`导入成功：${rows.length} 条投递记录 ✅`);
+  }catch(err){alert('导入失败：'+err.message);}
+  inp.value='';
+}
+
+/* ============ 导出 ============ */
+function hex2argb(h){return'FF'+String(h||'#ffffff').replace('#','').toUpperCase();}
+async function exportXlsx(){
+  const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet('秋招');
+  ws.addRow(HEADERS);
+  ws.getRow(1).eachCell(c=>{c.font={bold:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDDEBF7'}};});
+  DATA.forEach(r=>{
+    const row=ws.addRow(KEYS.map(k=>r[k]||''));
+    STAGES.forEach(([k])=>{
+      if(!has(r[k]))return;
+      const c=r[k+'_done']===false?THEME.todoNode.bg:THEME.doneNode.bg;
+      row.getCell(KEYS.indexOf(k)+1).fill={type:'pattern',pattern:'solid',fgColor:{argb:hex2argb(c)}};
+    });
+    if(r.progress==='挂'||has(r.endAt)){
+      const fc={color:{argb:hex2argb(THEME.endtext.fg)},bold:true};
+      row.getCell(KEYS.indexOf('progress')+1).font=fc;
+      row.getCell(KEYS.indexOf('endAt')+1).font=fc;
+    }
+  });
+  const W=[14,26,16,12,10,42,12,10,10,10,10,10,10,10,16,12,24];
+  ws.columns.forEach((c,i)=>c.width=W[i]||12);
+  ws.views=[{state:'frozen',ySplit:1}];
+  ws.autoFilter={from:'A1',to:{row:1,column:HEADERS.length}};
+  if(EVENTS.length){const w2=wb.addWorksheet('面试日历');
+    w2.addRow(['日期','时间段','标题','方式/备注','状态']);w2.getRow(1).font={bold:true};
+    [...EVENTS].sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>w2.addRow([e.date,e.time||'',e.title,e.note||'',e.done?'已完成':'待面']));
+    w2.columns.forEach(c=>c.width=18);}
+  if(SCHEDULE.length){const w3=wb.addWorksheet('面试时间表');
+    w3.addRow(['日期','公司','轮次','时间段','方式/备注','状态']);w3.getRow(1).font={bold:true};
+    [...SCHEDULE].sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>w3.addRow([e.date,e.company,roundName(e.round),e.time,e.note||'',e.done?'已完成':'待面']));
+    w3.columns.forEach(c=>c.width=16);}
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  a.download='秋招投递汇总_'+ymd(new Date())+'.xlsx';a.click();
+}
+
+/* ============ 启动 ============ */
+function tab(i,el){
+  document.querySelectorAll('nav div').forEach(d=>d.classList.remove('on'));el.classList.add('on');
+  document.querySelectorAll('.page').forEach((p,n)=>p.classList.toggle('on',n===i));
+  if(i===2)drawCal();if(i===3)drawSch();
+}
+document.querySelectorAll('.mask').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('on')});
+load();render();
+(function(){
+  const t=localStorage.getItem('qz_lastAuto'),today=ymd(new Date());
+  if(DATA.length&&t!==today){snapshot('每日自动存档（'+DATA.length+' 条）');localStorage.setItem('qz_lastAuto',today);}
+})();
+</script>
+
+<div style="margin:24px 18px 12px; padding:10px 14px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; font-size:11px; color:#64748b; line-height:1.6;">
+  <span style="font-weight:bold; color:#475569;">温馨提示：</span>版权所有：小红书 @笨笨熊不笨🐻｜本秋招投递管家为付费个人授权工具，仅授予购买者本人非商业、不可转让的使用权。严禁复制、源码提取、出租、二次转售本工具页面与代码。一旦核查到违规分发行为，将立即终止访问权限，并保留相关证据进行维权。
+</div>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>秋招投递管家 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .login-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            width: 380px;
+        }
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom:24px;
+        }
+        input {
+            width:100%;
+            padding:12px 14px;
+            border:1px solid #cbd5e1;
+            border-radius:8px;
+            font-size:16px;
+            margin-bottom:16px;
+        }
+        button {
+            width:100%;
+            padding:12px;
+            background:#2563eb;
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+        }
+        .tip {
+            margin-top:14px;
+            color:#ef4444;
+            text-align:center;
+            display:none;
+        }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <h2>秋招投递管家</h2>
+    <input id="pwdInput" placeholder="请输入访问密码" type="password">
+    <button onclick="checkPwd()">登录进入</button>
+    <div class="tip" id="errTip">密码错误，请重试</div>
+</div>
+
+<script>
+// =========在这里修改你的访问密码=========
+const PASSWORD = "bbxbb987";
+// ========================================
+
+function checkPwd(){
+    const input = document.getElementById('pwdInput').value;
+    if(input === PASSWORD){
+        // 密码正确，跳转到主页面 app.html
+        window.location.href = "app.html";
+    }else{
+        document.getElementById('errTip').style.display = "block";
+    }
+}
+</script>
+</body>
+</html>
